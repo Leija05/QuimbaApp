@@ -26,7 +26,6 @@ import {
   FloppyDisk,
   ArrowsClockwise,
   Download,
-  Upload,
   Copy,
   CalendarBlank,
   Bell,
@@ -38,12 +37,9 @@ import autoTable from "jspdf-autotable";
 import { saveAs } from "file-saver";
 
 const STORAGE_KEYS = {
-  records: "quimbar-records-v2",
-  uploads: "quimbar-uploads-v2",
   premium: "quimbar-premium-unlocked",
   theme: "quimbar-theme",
-  favoriteFilters: "quimbar-favorite-filters",
-  backup: "quimbar-auto-backup"
+  favoriteFilters: "quimbar-favorite-filters"
 };
 
 const PREMIUM_ACCESS_KEY = process.env.REACT_APP_PREMIUM_KEY || "QUIMBAR-PREMIUM-2026";
@@ -79,38 +75,6 @@ const formatCurrency = (value) => new Intl.NumberFormat("es-MX", { style: "curre
 const formatDate = (dateStr) => (!dateStr ? "-" : new Date(dateStr).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" }));
 const toNumber = (value) => Number.parseFloat(value || 0) || 0;
 const todayISO = () => new Date().toISOString().split("T")[0];
-const normalizeHeader = (value) => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
-
-const parseAmount = (value) => {
-  if (value === null || value === undefined) return 0;
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-  const cleaned = String(value).replace(/\$/g, "").replace(/,/g, "").trim();
-  if (!cleaned || cleaned === "-") return 0;
-  const parsed = Number.parseFloat(cleaned);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const parseExcelDate = (value) => {
-  if (!value && value !== 0) return todayISO();
-  if (typeof value === "number") {
-    const parsed = XLSX.SSF.parse_date_code(value);
-    if (parsed && parsed.y && parsed.m && parsed.d) {
-      return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
-    }
-  }
-  const asDate = new Date(value);
-  if (!Number.isNaN(asDate.getTime())) return asDate.toISOString().split("T")[0];
-  return String(value);
-};
-
-const findColumnIndex = (headers, aliases) => {
-  const normalizedAliases = aliases.map((alias) => normalizeHeader(alias));
-  return headers.findIndex((header) => {
-    if (!header) return false;
-    return normalizedAliases.some((alias) => header === alias || header.startsWith(alias) || alias.startsWith(header));
-  });
-};
-
 const readJSON = (key, fallback) => {
   try {
     const raw = localStorage.getItem(key);
@@ -118,23 +82,6 @@ const readJSON = (key, fallback) => {
   } catch {
     return fallback;
   }
-};
-
-const normalizeRecord = (record, idFallback) => {
-  const costo_t = toNumber(record.costo_t ?? record["COSTO T"]);
-  const costo_l = toNumber(record.costo_l ?? record["COSTO L"]);
-  return {
-    id: record.id || idFallback,
-    fecha: record.fecha || record.FECHA || todayISO(),
-    transportista: record.transportista || record.TRANSPORTISTA || "",
-    servicio: record.servicio || record.SERVICIO || "",
-    costo_t,
-    costo_l,
-    status: record.status || record.STATUS || "Pendiente",
-    saldo_a_favor: toNumber(record.saldo_a_favor ?? record["SALDO A FAVOR"]),
-    total: costo_t + costo_l,
-    created_at: record.created_at || new Date().toISOString()
-  };
 };
 
 const applyFilters = (records, searchTerm, statusFilter, premiumFilters, premiumEnabled) => {
@@ -250,8 +197,8 @@ const RecordForm = ({ record, onSave, onCancel, loading }) => {
 
 function App() {
   const [activeTab, setActiveTab] = useState("principal");
-  const [records, setRecords] = useState(() => readJSON(STORAGE_KEYS.records, []));
-  const [uploads, setUploads] = useState(() => readJSON(STORAGE_KEYS.uploads, []));
+  const [records, setRecords] = useState([]);
+  const [uploads, setUploads] = useState([]);
   const [favoriteFilters, setFavoriteFilters] = useState(() => readJSON(STORAGE_KEYS.favoriteFilters, []));
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -269,19 +216,12 @@ function App() {
   const [premiumKeyInput, setPremiumKeyInput] = useState("");
   const [premiumFilters, setPremiumFilters] = useState({ from: "", to: "", transportista: "", servicio: "", status: "Todos" });
   const [selectedIds, setSelectedIds] = useState([]);
-  const [dataMode, setDataMode] = useState("local");
   const [serverBooting, setServerBooting] = useState(true);
+  const [backendAvailable, setBackendAvailable] = useState(false);
 
-  useEffect(() => localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(records)), [records]);
-  useEffect(() => localStorage.setItem(STORAGE_KEYS.uploads, JSON.stringify(uploads)), [uploads]);
   useEffect(() => localStorage.setItem(STORAGE_KEYS.favoriteFilters, JSON.stringify(favoriteFilters)), [favoriteFilters]);
   useEffect(() => localStorage.setItem(STORAGE_KEYS.theme, darkMode ? "dark" : "light"), [darkMode]);
   useEffect(() => localStorage.setItem(STORAGE_KEYS.premium, isPremiumUnlocked ? "1" : "0"), [isPremiumUnlocked]);
-
-  useEffect(() => {
-    const backupPayload = { records, uploads, favoriteFilters, backed_up_at: new Date().toISOString() };
-    localStorage.setItem(STORAGE_KEYS.backup, JSON.stringify(backupPayload));
-  }, [records, uploads, favoriteFilters]);
 
   useEffect(() => {
     const loadFromBackend = async () => {
@@ -291,15 +231,16 @@ function App() {
           const [recordsRes, uploadsRes] = await Promise.all([apiRequest("get", "/records"), apiRequest("get", "/uploads")]);
           setRecords(recordsRes.data || []);
           setUploads(uploadsRes.data || []);
-          setDataMode("backend");
+          setBackendAvailable(true);
           setServerBooting(false);
           return;
         } catch {
           await new Promise((resolve) => setTimeout(resolve, 900));
         }
       }
-      setDataMode("local");
+      setBackendAvailable(false);
       setServerBooting(false);
+      toast.error("No se pudo conectar con quimbar-server.exe. Reinicia la app.");
     };
     loadFromBackend();
   }, []);
@@ -369,17 +310,13 @@ function App() {
   const handleSaveRecord = async (data) => {
     setSaving(true);
     try {
-      if (dataMode === "backend") {
-        if (selectedRecord) {
-          await apiRequest("put", `/records/${selectedRecord.id}`, { data });
-        } else {
-          await apiRequest("post", "/records", { data });
-        }
-        await reloadBackendData();
+      if (!backendAvailable) throw new Error("backend_unavailable");
+      if (selectedRecord) {
+        await apiRequest("put", `/records/${selectedRecord.id}`, { data });
       } else {
-        const next = normalizeRecord({ ...data, id: selectedRecord?.id || crypto.randomUUID(), created_at: selectedRecord?.created_at || new Date().toISOString() });
-        setRecords((prev) => (selectedRecord ? prev.map((r) => (r.id === selectedRecord.id ? next : r)) : [next, ...prev]));
+        await apiRequest("post", "/records", { data });
       }
+      await reloadBackendData();
       toast.success(selectedRecord ? "Registro actualizado" : "Registro creado");
       setShowForm(false);
       setSelectedRecord(null);
@@ -392,91 +329,12 @@ function App() {
 
   const handleDeleteRecord = async (id) => {
     if (!isPremiumUnlocked) return toast.error("Borrar registros es Premium");
-    if (dataMode === "backend") {
-      await apiRequest("delete", `/records/${id}`);
-      await reloadBackendData();
-    } else {
-      setRecords((prev) => prev.filter((r) => r.id !== id));
-    }
+    if (!backendAvailable) return toast.error("Servidor no disponible");
+    await apiRequest("delete", `/records/${id}`);
+    await reloadBackendData();
     setShowDeleteConfirm(null);
     toast.success("Registro eliminado");
   };
-
-  const parseExcelFile = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const wb = XLSX.read(event.target?.result, { type: "binary", cellDates: true });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-          const aliases = {
-            fecha: ["fecha", "date"],
-            costo_t: ["costo t", "costot", "costo transporte", "costo"],
-            transportista: ["transportista", "transporter", "carrier", "transporte", "transport"],
-            servicio: ["servicio", "service", "descripcion", "cliente"],
-            costo_l: ["costo l", "costol", "costo local", "costo"],
-            status: ["status", "estado", "estatus", "statu"],
-            total: ["total", "tota"],
-            saldo_a_favor: ["saldo a favor", "saldo", "balance", "saldoafavor"]
-          };
-
-          let headerRowIndex = 0;
-          let bestScore = -1;
-          for (let i = 0; i < Math.min(rows.length, 25); i += 1) {
-            const normalized = (rows[i] || []).map((cell) => normalizeHeader(cell));
-            const score = normalized.filter((cell) => ["fecha", "costo", "transportista", "transport", "servicio", "status", "estado", "total"].includes(cell)).length;
-            if (score > bestScore) {
-              bestScore = score;
-              headerRowIndex = i;
-            }
-          }
-
-          const normalizedHeaders = (rows[headerRowIndex] || []).map((cell) => normalizeHeader(cell));
-          const col = Object.fromEntries(Object.entries(aliases).map(([key, names]) => [key, findColumnIndex(normalizedHeaders, names)]));
-          const costoCandidates = normalizedHeaders
-            .map((header, index) => (header.startsWith("costo") ? index : -1))
-            .filter((index) => index >= 0);
-
-          if (col.costo_t === col.costo_l && costoCandidates.length >= 2) {
-            col.costo_t = costoCandidates[0];
-            col.costo_l = costoCandidates[1];
-          } else if (col.costo_t === col.costo_l) {
-            col.costo_l = -1;
-          }
-
-          const importedRows = rows
-            .slice(headerRowIndex + 1)
-            .filter((row) => row.some((value) => String(value || "").trim() !== ""))
-            .filter((row) => !/total\s*(pendiente|pagado|general)/i.test(row.map((value) => String(value || "")).join(" ")))
-            .map((row) => {
-              const costo_t = col.costo_t >= 0 ? parseAmount(row[col.costo_t]) : 0;
-              const costo_l = col.costo_l >= 0 ? parseAmount(row[col.costo_l]) : 0;
-              const totalFromSheet = col.total >= 0 ? parseAmount(row[col.total]) : 0;
-              const statusRaw = col.status >= 0 ? String(row[col.status] || "") : "";
-              const status = /^pagado$/i.test(statusRaw.trim()) ? "Pagado" : "Pendiente";
-              return normalizeRecord({
-                id: crypto.randomUUID(),
-                fecha: col.fecha >= 0 ? parseExcelDate(row[col.fecha]) : todayISO(),
-                transportista: col.transportista >= 0 ? String(row[col.transportista] || "").trim() : "",
-                servicio: col.servicio >= 0 ? String(row[col.servicio] || "").trim() : "",
-                costo_t,
-                costo_l,
-                total: totalFromSheet > 0 ? totalFromSheet : (Math.abs(costo_t - costo_l) < 1e-9 ? costo_t : (costo_t + costo_l)),
-                status,
-                saldo_a_favor: col.saldo_a_favor >= 0 ? parseAmount(row[col.saldo_a_favor]) : 0
-              });
-            })
-            .filter((record) => record.transportista || record.servicio || record.costo_t > 0 || record.costo_l > 0 || record.saldo_a_favor > 0);
-
-          resolve(importedRows);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = reject;
-      reader.readAsBinaryString(file);
-    });
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -486,23 +344,21 @@ function App() {
       e.target.value = "";
       return;
     }
+    if (!backendAvailable) {
+      toast.error("No se detectó quimbar-server.exe en ejecución.");
+      e.target.value = "";
+      return;
+    }
     setUploading(true);
     try {
-      if (dataMode === "backend") {
-        const formData = new FormData();
-        formData.append("file", file);
-        const response = await apiRequest("post", "/upload-excel", {
-          data: formData,
-          headers: { "Content-Type": "multipart/form-data" }
-        });
-        await reloadBackendData();
-        toast.success(`${response.data?.records_imported || 0} registros importados`);
-      } else {
-        const imported = await parseExcelFile(file);
-        setRecords((prev) => [...imported, ...prev]);
-        setUploads((prev) => [{ id: crypto.randomUUID(), filename: file.name, uploaded_at: new Date().toISOString(), records_count: imported.length, records_snapshot: imported }, ...prev]);
-        toast.success(`${imported.length} registros importados localmente`);
-      }
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await apiRequest("post", "/upload-excel", {
+        data: formData,
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      await reloadBackendData();
+      toast.success(`${response.data?.records_imported || 0} registros importados`);
     } catch {
       toast.error("Error al procesar el Excel");
     } finally {
@@ -546,87 +402,69 @@ function App() {
 
   const handleMassStatusChange = async (status) => {
     if (!selectedIds.length) return;
-    if (dataMode === "backend") {
-      const selected = records.filter((r) => selectedIds.includes(r.id));
-      await Promise.all(selected.map((record) => apiRequest("put", `/records/${record.id}`, { data: { status } })));
-      await reloadBackendData();
-    } else {
-      setRecords((prev) => prev.map((r) => (selectedIds.includes(r.id) ? { ...r, status } : r)));
-    }
+    if (!backendAvailable) return toast.error("Servidor no disponible");
+    const selected = records.filter((r) => selectedIds.includes(r.id));
+    await Promise.all(selected.map((record) => apiRequest("put", `/records/${record.id}`, { data: { status } })));
+    await reloadBackendData();
     toast.success(`Se actualizaron ${selectedIds.length} registros`);
   };
 
   const handleMassDelete = async () => {
     if (!selectedIds.length) return;
-    if (dataMode === "backend") {
-      await Promise.all(selectedIds.map((id) => apiRequest("delete", `/records/${id}`)));
-      await reloadBackendData();
-    } else {
-      setRecords((prev) => prev.filter((r) => !selectedIds.includes(r.id)));
-    }
+    if (!backendAvailable) return toast.error("Servidor no disponible");
+    await Promise.all(selectedIds.map((id) => apiRequest("delete", `/records/${id}`)));
+    await reloadBackendData();
     setSelectedIds([]);
     toast.success("Registros eliminados por lote");
   };
 
   const handleMassDuplicate = async () => {
     if (!selectedIds.length) return;
+    if (!backendAvailable) return toast.error("Servidor no disponible");
     const selected = records.filter((r) => selectedIds.includes(r.id));
-    if (dataMode === "backend") {
-      await Promise.all(selected.map((record) => apiRequest("post", "/records", {
-        data: {
-          fecha: record.fecha,
-          costo_t: record.costo_t,
-          transportista: record.transportista,
-          servicio: record.servicio,
-          costo_l: record.costo_l,
-          status: record.status,
-          saldo_a_favor: record.saldo_a_favor
-        }
-      })));
-      await reloadBackendData();
-    } else {
-      const duplicates = selected.map((r) => ({ ...r, id: crypto.randomUUID(), created_at: new Date().toISOString() }));
-      setRecords((prev) => [...duplicates, ...prev]);
-    }
+    await Promise.all(selected.map((record) => apiRequest("post", "/records", {
+      data: {
+        fecha: record.fecha,
+        costo_t: record.costo_t,
+        transportista: record.transportista,
+        servicio: record.servicio,
+        costo_l: record.costo_l,
+        status: record.status,
+        saldo_a_favor: record.saldo_a_favor
+      }
+    })));
+    await reloadBackendData();
     toast.success(`${selected.length} registros duplicados`);
   };
 
   const handleLoadUploadedFile = async (uploadId) => {
     setLoadingUploadId(uploadId);
-    if (dataMode === "backend") {
-      await apiRequest("post", `/uploads/${uploadId}/load`);
-      await reloadBackendData();
-      toast.success("Historial cargado");
-    } else {
-      const upload = uploads.find((u) => u.id === uploadId);
-      if (upload) {
-        setRecords(upload.records_snapshot || []);
-        toast.success("Historial cargado");
-      }
+    if (!backendAvailable) {
+      setLoadingUploadId(null);
+      return toast.error("Servidor no disponible");
     }
+    await apiRequest("post", `/uploads/${uploadId}/load`);
+    await reloadBackendData();
+    toast.success("Historial cargado");
     setLoadingUploadId(null);
   };
 
   const handleDeleteUploadedFile = async (uploadId) => {
-    if (dataMode === "backend") {
-      await apiRequest("delete", `/uploads/${uploadId}`);
-      await reloadBackendData();
-    } else {
-      setUploads((prev) => prev.filter((u) => u.id !== uploadId));
-    }
+    if (!backendAvailable) return toast.error("Servidor no disponible");
+    await apiRequest("delete", `/uploads/${uploadId}`);
+    await reloadBackendData();
     toast.success("Archivo eliminado del historial");
   };
 
   const handleClearAllData = async () => {
     if (!window.confirm("¿Seguro que quieres borrar todos los datos de la app?")) return;
     setClearingAll(true);
-    if (dataMode === "backend") {
-      await Promise.all([apiRequest("delete", "/records"), apiRequest("delete", "/uploads")]);
-      await reloadBackendData();
-    } else {
-      setRecords([]);
-      setUploads([]);
+    if (!backendAvailable) {
+      setClearingAll(false);
+      return toast.error("Servidor no disponible");
     }
+    await Promise.all([apiRequest("delete", "/records"), apiRequest("delete", "/uploads")]);
+    await reloadBackendData();
     setFavoriteFilters([]);
     setSearchTerm("");
     setStatusFilter("Todos");
@@ -649,32 +487,6 @@ function App() {
     toast.success("Backup exportado");
   };
 
-  const handleImportBackup = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    try {
-      const payload = JSON.parse(text);
-      setRecords((payload.records || []).map((r) => normalizeRecord(r, crypto.randomUUID())));
-      setUploads(payload.uploads || []);
-      setFavoriteFilters(payload.favoriteFilters || []);
-      toast.success("Backup restaurado");
-    } catch {
-      toast.error("Archivo de backup inválido");
-    } finally {
-      e.target.value = "";
-    }
-  };
-
-  const handleRestoreAutoBackup = () => {
-    const backup = readJSON(STORAGE_KEYS.backup, null);
-    if (!backup) return toast.error("No hay backup automático");
-    setRecords((backup.records || []).map((r) => normalizeRecord(r, crypto.randomUUID())));
-    setUploads(backup.uploads || []);
-    setFavoriteFilters(backup.favoriteFilters || []);
-    toast.success("Backup automático restaurado");
-  };
-
   return (
     <div className={`app-container ${darkMode ? "dark-theme" : ""}`}>
       <Toaster position="top-right" richColors />
@@ -685,9 +497,9 @@ function App() {
             <p className="text-sm text-slate-500">
               {serverBooting
                 ? "Iniciando servidor local en 127.0.0.1:8000..."
-                : dataMode === "backend"
-                  ? "Modo backend automático (127.0.0.1:8000)"
-                  : "Modo local de respaldo"} • Gestión de Registros
+                : backendAvailable
+                  ? "Conectado a quimbar-server.exe (127.0.0.1:8000)"
+                  : "Error: quimbar-server.exe no disponible"} • Gestión de Registros
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -781,8 +593,6 @@ function App() {
               <button className="btn-secondary" onClick={handleMassDuplicate}><Copy size={16} />Duplicar</button>
               <button className="btn-danger" onClick={handleMassDelete}><Trash size={16} />Eliminar lote</button>
               <button className="btn-secondary" onClick={handleExportBackup}><Download size={16} />Backup</button>
-              <label className="btn-secondary cursor-pointer"><input type="file" accept="application/json" className="hidden" onChange={handleImportBackup} /><Upload size={16} />Restaurar</label>
-              <button className="btn-secondary" onClick={handleRestoreAutoBackup}><ArrowsClockwise size={16} />Auto-restaurar</button>
             </div>
           </div>
         )}

@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const isDev = !app.isPackaged;
@@ -7,7 +7,7 @@ let backendProcess = null;
 
 function resolveBackendExecutablePath() {
   if (isDev) {
-    return path.join(__dirname, '../../resources/quimbar-server.exe');
+    return path.join(__dirname, '../resources/quimbar-server.exe');
   }
   return path.join(process.resourcesPath, 'resources', 'quimbar-server.exe');
 }
@@ -69,7 +69,15 @@ function createWindow() {
 
 app.whenReady().then(async () => {
   startBackend();
-  await waitForBackendReady();
+  const ready = await waitForBackendReady();
+  if (!ready) {
+    dialog.showErrorBox(
+      'Error de servidor local',
+      'No se pudo iniciar quimbar-server.exe en 127.0.0.1:8000. Reinstala o abre de nuevo la aplicación.'
+    );
+    app.quit();
+    return;
+  }
   createWindow();
 
   app.on('activate', () => {
