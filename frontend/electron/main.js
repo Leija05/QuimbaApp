@@ -1,5 +1,6 @@
 const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { spawn } = require('child_process');
 const isDev = !app.isPackaged;
 
@@ -14,29 +15,49 @@ function resolveBackendExecutablePath() {
 
 function startBackend() {
   const backendExecutablePath = resolveBackendExecutablePath();
+  if (!fs.existsSync(backendExecutablePath)) {
+    console.error('No existe quimbar-server.exe en:', backendExecutablePath);
+    return;
+  }
+
   backendProcess = spawn(backendExecutablePath, [], {
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
+    cwd: path.dirname(backendExecutablePath),
     env: process.env,
   });
   backendProcess.once('error', (error) => {
     console.error('No se pudo iniciar quimbar-server.exe:', error);
   });
+  backendProcess.stdout?.on('data', () => {});
+  backendProcess.stderr?.on('data', () => {});
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function waitForBackendReady() {
-  const maxAttempts = 30;
+  const maxAttempts = 60;
+  const urlsToProbe = [
+    'http://127.0.0.1:8000/api/totals',
+    'http://127.0.0.1:8000/totals',
+    'http://127.0.0.1:8000/api/',
+    'http://127.0.0.1:8000/',
+  ];
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/totals');
-      if (response.ok) {
-        return true;
+    for (const url of urlsToProbe) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          return true;
+        }
+      } catch (_) {
+        // Keep polling until backend is ready
       }
-    } catch (_) {
-      // Keep polling until backend is ready
+    }
+
+    if (backendProcess && backendProcess.exitCode !== null) {
+      return false;
     }
 
     await sleep(1000);
