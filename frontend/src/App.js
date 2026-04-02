@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import "@/App.css";
 import { Toaster, toast } from "sonner";
+import axios from "axios";
 import {
   Files,
   Truck,
@@ -46,6 +47,26 @@ const STORAGE_KEYS = {
 };
 
 const PREMIUM_ACCESS_KEY = process.env.REACT_APP_PREMIUM_KEY || "QUIMBAR-PREMIUM-2026";
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+const API_CANDIDATES = BACKEND_URL.endsWith("/api")
+  ? [BACKEND_URL, BACKEND_URL.replace(/\/api$/, "")]
+  : [`${BACKEND_URL}/api`, BACKEND_URL];
+
+const apiRequest = async (method, path, options = {}) => {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  let lastError;
+  for (const baseUrl of API_CANDIDATES) {
+    try {
+      return await axios({ method, url: `${baseUrl}${normalizedPath}`, ...options });
+    } catch (error) {
+      lastError = error;
+      if (error?.response?.status !== 404) {
+        throw error;
+      }
+    }
+  }
+  throw lastError;
+};
 
 const TABS = [
   { id: "principal", label: "Archivo Principal", icon: Files },
@@ -217,6 +238,7 @@ function App() {
   const [premiumKeyInput, setPremiumKeyInput] = useState("");
   const [premiumFilters, setPremiumFilters] = useState({ from: "", to: "", transportista: "", servicio: "", status: "Todos" });
   const [selectedIds, setSelectedIds] = useState([]);
+  const [dataMode, setDataMode] = useState("local");
 
   useEffect(() => localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(records)), [records]);
   useEffect(() => localStorage.setItem(STORAGE_KEYS.uploads, JSON.stringify(uploads)), [uploads]);
@@ -228,6 +250,20 @@ function App() {
     const backupPayload = { records, uploads, favoriteFilters, backed_up_at: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEYS.backup, JSON.stringify(backupPayload));
   }, [records, uploads, favoriteFilters]);
+
+  useEffect(() => {
+    const loadFromBackend = async () => {
+      try {
+        const [recordsRes, uploadsRes] = await Promise.all([apiRequest("get", "/records"), apiRequest("get", "/uploads")]);
+        setRecords(recordsRes.data || []);
+        setUploads(uploadsRes.data || []);
+        setDataMode("backend");
+      } catch {
+        setDataMode("local");
+      }
+    };
+    loadFromBackend();
+  }, []);
 
   const totals = useMemo(() => {
     const total_pendiente = records.filter((r) => r.status === "Pendiente").reduce((sum, r) => sum + toNumber(r.total), 0);
@@ -285,19 +321,44 @@ function App() {
     };
   }, [records]);
 
-  const handleSaveRecord = (data) => {
-    setSaving(true);
-    const next = normalizeRecord({ ...data, id: selectedRecord?.id || crypto.randomUUID(), created_at: selectedRecord?.created_at || new Date().toISOString() });
-    setRecords((prev) => (selectedRecord ? prev.map((r) => (r.id === selectedRecord.id ? next : r)) : [next, ...prev]));
-    setSaving(false);
-    setShowForm(false);
-    setSelectedRecord(null);
-    toast.success(selectedRecord ? "Registro actualizado" : "Registro creado");
+  const reloadBackendData = async () => {
+    const [recordsRes, uploadsRes] = await Promise.all([apiRequest("get", "/records"), apiRequest("get", "/uploads")]);
+    setRecords(recordsRes.data || []);
+    setUploads(uploadsRes.data || []);
   };
 
-  const handleDeleteRecord = (id) => {
+  const handleSaveRecord = async (data) => {
+    setSaving(true);
+    try {
+      if (dataMode === "backend") {
+        if (selectedRecord) {
+          await apiRequest("put", `/records/${selectedRecord.id}`, { data });
+        } else {
+          await apiRequest("post", "/records", { data });
+        }
+        await reloadBackendData();
+      } else {
+        const next = normalizeRecord({ ...data, id: selectedRecord?.id || crypto.randomUUID(), created_at: selectedRecord?.created_at || new Date().toISOString() });
+        setRecords((prev) => (selectedRecord ? prev.map((r) => (r.id === selectedRecord.id ? next : r)) : [next, ...prev]));
+      }
+      toast.success(selectedRecord ? "Registro actualizado" : "Registro creado");
+      setShowForm(false);
+      setSelectedRecord(null);
+    } catch {
+      toast.error("No se pudo guardar el registro");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteRecord = async (id) => {
     if (!isPremiumUnlocked) return toast.error("Borrar registros es Premium");
-    setRecords((prev) => prev.filter((r) => r.id !== id));
+    if (dataMode === "backend") {
+      await apiRequest("delete", `/records/${id}`);
+      await reloadBackendData();
+    } else {
+      setRecords((prev) => prev.filter((r) => r.id !== id));
+    }
     setShowDeleteConfirm(null);
     toast.success("Registro eliminado");
   };
@@ -324,11 +385,22 @@ function App() {
     if (!file) return;
     setUploading(true);
     try {
-      const rows = await parseExcelFile(file);
-      const imported = rows.map((row, idx) => normalizeRecord(row, crypto.randomUUID() || `${Date.now()}-${idx}`));
-      setRecords((prev) => [...imported, ...prev]);
-      setUploads((prev) => [{ id: crypto.randomUUID(), filename: file.name, uploaded_at: new Date().toISOString(), records_count: imported.length, records_snapshot: imported }, ...prev]);
-      toast.success(`${imported.length} registros importados localmente`);
+      if (dataMode === "backend") {
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await apiRequest("post", "/upload-excel", {
+          data: formData,
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        await reloadBackendData();
+        toast.success(`${response.data?.records_imported || 0} registros importados`);
+      } else {
+        const rows = await parseExcelFile(file);
+        const imported = rows.map((row, idx) => normalizeRecord(row, crypto.randomUUID() || `${Date.now()}-${idx}`));
+        setRecords((prev) => [...imported, ...prev]);
+        setUploads((prev) => [{ id: crypto.randomUUID(), filename: file.name, uploaded_at: new Date().toISOString(), records_count: imported.length, records_snapshot: imported }, ...prev]);
+        toast.success(`${imported.length} registros importados localmente`);
+      }
     } catch {
       toast.error("Error al procesar el Excel");
     } finally {
@@ -370,53 +442,95 @@ function App() {
     toast.success("PDF exportado");
   };
 
-  const handleMassStatusChange = (status) => {
+  const handleMassStatusChange = async (status) => {
     if (!selectedIds.length) return;
-    setRecords((prev) => prev.map((r) => (selectedIds.includes(r.id) ? { ...r, status } : r)));
+    if (dataMode === "backend") {
+      const selected = records.filter((r) => selectedIds.includes(r.id));
+      await Promise.all(selected.map((record) => apiRequest("put", `/records/${record.id}`, { data: { status } })));
+      await reloadBackendData();
+    } else {
+      setRecords((prev) => prev.map((r) => (selectedIds.includes(r.id) ? { ...r, status } : r)));
+    }
     toast.success(`Se actualizaron ${selectedIds.length} registros`);
   };
 
-  const handleMassDelete = () => {
+  const handleMassDelete = async () => {
     if (!selectedIds.length) return;
-    setRecords((prev) => prev.filter((r) => !selectedIds.includes(r.id)));
+    if (dataMode === "backend") {
+      await Promise.all(selectedIds.map((id) => apiRequest("delete", `/records/${id}`)));
+      await reloadBackendData();
+    } else {
+      setRecords((prev) => prev.filter((r) => !selectedIds.includes(r.id)));
+    }
     setSelectedIds([]);
     toast.success("Registros eliminados por lote");
   };
 
-  const handleMassDuplicate = () => {
+  const handleMassDuplicate = async () => {
     if (!selectedIds.length) return;
     const selected = records.filter((r) => selectedIds.includes(r.id));
-    const duplicates = selected.map((r) => ({ ...r, id: crypto.randomUUID(), created_at: new Date().toISOString() }));
-    setRecords((prev) => [...duplicates, ...prev]);
-    toast.success(`${duplicates.length} registros duplicados`);
+    if (dataMode === "backend") {
+      await Promise.all(selected.map((record) => apiRequest("post", "/records", {
+        data: {
+          fecha: record.fecha,
+          costo_t: record.costo_t,
+          transportista: record.transportista,
+          servicio: record.servicio,
+          costo_l: record.costo_l,
+          status: record.status,
+          saldo_a_favor: record.saldo_a_favor
+        }
+      })));
+      await reloadBackendData();
+    } else {
+      const duplicates = selected.map((r) => ({ ...r, id: crypto.randomUUID(), created_at: new Date().toISOString() }));
+      setRecords((prev) => [...duplicates, ...prev]);
+    }
+    toast.success(`${selected.length} registros duplicados`);
   };
 
-  const handleLoadUploadedFile = (uploadId) => {
+  const handleLoadUploadedFile = async (uploadId) => {
     setLoadingUploadId(uploadId);
-    const upload = uploads.find((u) => u.id === uploadId);
-    if (upload) {
-      setRecords(upload.records_snapshot || []);
+    if (dataMode === "backend") {
+      await apiRequest("post", `/uploads/${uploadId}/load`);
+      await reloadBackendData();
       toast.success("Historial cargado");
+    } else {
+      const upload = uploads.find((u) => u.id === uploadId);
+      if (upload) {
+        setRecords(upload.records_snapshot || []);
+        toast.success("Historial cargado");
+      }
     }
     setLoadingUploadId(null);
   };
 
-  const handleDeleteUploadedFile = (uploadId) => {
-    setUploads((prev) => prev.filter((u) => u.id !== uploadId));
+  const handleDeleteUploadedFile = async (uploadId) => {
+    if (dataMode === "backend") {
+      await apiRequest("delete", `/uploads/${uploadId}`);
+      await reloadBackendData();
+    } else {
+      setUploads((prev) => prev.filter((u) => u.id !== uploadId));
+    }
     toast.success("Archivo eliminado del historial");
   };
 
-  const handleClearAllData = () => {
-    if (!window.confirm("¿Seguro que quieres borrar todos los datos locales?")) return;
+  const handleClearAllData = async () => {
+    if (!window.confirm("¿Seguro que quieres borrar todos los datos de la app?")) return;
     setClearingAll(true);
-    setRecords([]);
-    setUploads([]);
+    if (dataMode === "backend") {
+      await Promise.all([apiRequest("delete", "/records"), apiRequest("delete", "/uploads")]);
+      await reloadBackendData();
+    } else {
+      setRecords([]);
+      setUploads([]);
+    }
     setFavoriteFilters([]);
     setSearchTerm("");
     setStatusFilter("Todos");
     setSelectedIds([]);
     setClearingAll(false);
-    toast.success("Todos los datos locales fueron eliminados");
+    toast.success("Todos los datos fueron eliminados");
   };
 
   const handleSaveFavoriteFilter = () => {
@@ -466,7 +580,9 @@ function App() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Sistema de Quimbar</h1>
-            <p className="text-sm text-slate-500">Modo local (sin servidor) • Gestión de Registros</p>
+            <p className="text-sm text-slate-500">
+              {dataMode === "backend" ? "Modo backend automático (sin arrancarlo manualmente)" : "Modo local de respaldo"} • Gestión de Registros
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <label className="btn-primary cursor-pointer">
