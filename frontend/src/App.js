@@ -392,35 +392,65 @@ function App() {
   };
 
   const exportToExcel = () => {
-    const rows = filteredRecords.map((r) => ({
-      FECHA: r.fecha,
-      "COSTO T": toNumber(r.costo_t),
-      TRANSPORTISTA: r.transportista,
-      SERVICIO: r.servicio,
-      "COSTO L": toNumber(r.costo_l),
-      STATUS: r.status,
-      TOTAL: toNumber(r.total),
-      "SALDO A FAVOR": toNumber(r.saldo_a_favor)
-    }));
+    const exportColumns = currentColumns.filter((column) => column !== "acciones");
+    const rows = filteredRecords.map((record) => (
+      exportColumns.reduce((acc, column) => {
+        const key = COLUMN_LABELS[column]?.toUpperCase() || column.toUpperCase();
+        if (column === "fecha") acc[key] = record.fecha;
+        else if (column === "status") acc[key] = record.status || "-";
+        else if (["costo_t", "costo_l", "total", "saldo_a_favor"].includes(column)) acc[key] = toNumber(record[column]);
+        else acc[key] = record[column] || "-";
+        return acc;
+      }, {})
+    ));
+
+    if (activeTab === "cliente") {
+      rows.push({});
+      rows.push({
+        [COLUMN_LABELS.servicio.toUpperCase()]: "TOTAL PENDIENTE",
+        [COLUMN_LABELS.costo_l.toUpperCase()]: toNumber(totals.total_costo_l_pendiente)
+      });
+    }
+
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Registros");
+    XLSX.utils.book_append_sheet(wb, ws, TABS.find((tab) => tab.id === activeTab)?.label || "Registros");
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `quimbar_${todayISO()}.xlsx`);
+    saveAs(new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `quimbar_${activeTab}_${todayISO()}.xlsx`);
     showNotice("Excel exportado", "Éxito");
   };
 
   const exportToPDF = () => {
     if (!isPremiumUnlocked) return showNotice("Exportar PDF es Premium", "Premium");
+    const exportColumns = currentColumns.filter((column) => column !== "acciones");
+    const header = exportColumns.map((column) => COLUMN_LABELS[column]);
+    const body = filteredRecords.map((record) => (
+      exportColumns.map((column) => {
+        if (column === "fecha") return formatDate(record.fecha);
+        if (column === "status") return record.status || "-";
+        if (["costo_t", "costo_l", "total", "saldo_a_favor"].includes(column)) return formatCurrency(record[column]);
+        return record[column] || "-";
+      })
+    ));
+
+    if (activeTab === "cliente") {
+      const summaryRow = exportColumns.map((column) => {
+        if (column === "servicio") return "TOTAL PENDIENTE";
+        if (column === "costo_l") return formatCurrency(totals.total_costo_l_pendiente);
+        return "";
+      });
+      body.push(summaryRow);
+    }
+
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text("Sistema de Quimbar - Reporte", 14, 20);
+    doc.text(`Sistema de Quimbar - ${TABS.find((tab) => tab.id === activeTab)?.label || "Reporte"}`, 14, 20);
     autoTable(doc, {
       startY: 30,
-      head: [["Fecha", "Transportista", "Servicio", "Status", "Total"]],
-      body: filteredRecords.map((r) => [r.fecha, r.transportista || "-", r.servicio || "-", r.status, formatCurrency(r.total)])
+      head: [header],
+      body
     });
-    doc.save(`quimbar_reporte_${todayISO()}.pdf`);
+    doc.save(`quimbar_reporte_${activeTab}_${todayISO()}.pdf`);
     showNotice("PDF exportado", "Éxito");
   };
 
