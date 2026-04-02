@@ -109,6 +109,24 @@ const applyFilters = (records, searchTerm, statusFilter, premiumFilters, premium
 
 const StatusBadge = ({ status }) => <span className={status === "Pagado" ? "badge-paid" : "badge-pending"}>{status}</span>;
 
+const TAB_COLUMNS = {
+  principal: ["fecha", "costo_t", "transportista", "servicio", "costo_l", "status", "total", "saldo_a_favor", "acciones"],
+  transporte: ["fecha", "costo_t", "transportista", "servicio"],
+  cliente: ["fecha", "servicio", "costo_l", "status"]
+};
+
+const COLUMN_LABELS = {
+  fecha: "Fecha",
+  costo_t: "Costo T",
+  transportista: "Transportista",
+  servicio: "Servicio",
+  costo_l: "Costo L",
+  status: "Status",
+  total: "Total",
+  saldo_a_favor: "Saldo a favor",
+  acciones: "Acciones"
+};
+
 const MetricCard = ({ label, value, variant = "default" }) => {
   const colors = { default: "text-slate-900", success: "text-emerald-600", danger: "text-red-600" };
   return (
@@ -256,6 +274,7 @@ function App() {
     () => applyFilters(records, searchTerm, statusFilter, premiumFilters, isPremiumUnlocked),
     [records, searchTerm, statusFilter, premiumFilters, isPremiumUnlocked]
   );
+  const currentColumns = TAB_COLUMNS[activeTab] || TAB_COLUMNS.principal;
 
   const premiumAnalytics = useMemo(() => {
     const groupedByMonth = records.reduce((acc, record) => {
@@ -532,10 +551,9 @@ function App() {
               <>
                 <MetricCard label="Total Pendiente" value={totals.total_pendiente} variant="danger" />
                 <MetricCard label="Total Pagado" value={totals.total_pagado} variant="success" />
-                <MetricCard label="Total General" value={totals.total_pendiente + totals.total_pagado} />
               </>
             )}
-            {activeTab === "cliente" && <MetricCard label="Total Costo L Pendiente" value={totals.total_costo_l_pendiente} variant="danger" />}
+            {activeTab === "cliente" && <MetricCard label="Total Pendiente" value={totals.total_costo_l_pendiente} variant="danger" />}
           </div>
         )}
 
@@ -630,24 +648,51 @@ function App() {
             ) : (
               <div className="table-scroll">
                 <table className="data-table">
-                  <thead><tr>{isPremiumUnlocked && activeTab === "principal" && <th></th>}<th>Fecha</th><th className="text-right">Costo T</th><th>Transportista</th><th>Servicio</th><th className="text-right">Costo L</th><th>Status</th><th className="text-right">Total</th><th className="text-right">Saldo</th>{activeTab === "principal" && <th className="text-center">Acciones</th>}</tr></thead>
+                  <thead>
+                    <tr>
+                      {isPremiumUnlocked && activeTab === "principal" && <th></th>}
+                      {currentColumns.map((column) => {
+                        const numericCol = ["costo_t", "costo_l", "total", "saldo_a_favor"].includes(column);
+                        const centerCol = column === "acciones";
+                        return (
+                          <th key={column} className={numericCol ? "text-right" : centerCol ? "text-center" : ""}>
+                            {COLUMN_LABELS[column]}
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
                   <tbody>
                     {filteredRecords.map((record) => (
                       <tr key={record.id} className={selectedIds.includes(record.id) ? "row-selected" : ""}>
                         {isPremiumUnlocked && activeTab === "principal" && <td><input type="checkbox" checked={selectedIds.includes(record.id)} onChange={() => setSelectedIds((prev) => (prev.includes(record.id) ? prev.filter((id) => id !== record.id) : [...prev, record.id]))} /></td>}
-                        <td>{formatDate(record.fecha)}</td>
-                        <td className="text-right tabular-nums">{formatCurrency(record.costo_t)}</td>
-                        <td>{record.transportista || "-"}</td>
-                        <td>{record.servicio || "-"}</td>
-                        <td className="text-right tabular-nums">{formatCurrency(record.costo_l)}</td>
-                        <td><StatusBadge status={record.status} /></td>
-                        <td className="text-right tabular-nums">{formatCurrency(record.total)}</td>
-                        <td className="text-right tabular-nums">{formatCurrency(record.saldo_a_favor)}</td>
-                        {activeTab === "principal" && (
+                        {currentColumns.includes("fecha") && <td>{formatDate(record.fecha)}</td>}
+                        {currentColumns.includes("costo_t") && <td className="text-right tabular-nums">{formatCurrency(record.costo_t)}</td>}
+                        {currentColumns.includes("transportista") && <td>{record.transportista || "-"}</td>}
+                        {currentColumns.includes("servicio") && <td>{record.servicio || "-"}</td>}
+                        {currentColumns.includes("costo_l") && <td className="text-right tabular-nums">{formatCurrency(record.costo_l)}</td>}
+                        {currentColumns.includes("status") && <td><StatusBadge status={record.status} /></td>}
+                        {currentColumns.includes("total") && <td className="text-right tabular-nums">{formatCurrency(record.total)}</td>}
+                        {currentColumns.includes("saldo_a_favor") && <td className="text-right tabular-nums">{formatCurrency(record.saldo_a_favor)}</td>}
+                        {currentColumns.includes("acciones") && (
                           <td className="text-center">
                             <div className="flex justify-center gap-2">
-                              <button onClick={() => { if (!isPremiumUnlocked) return toast.error("Editar es Premium"); setSelectedRecord(record); setShowForm(true); }} className="p-1 hover:bg-slate-100 rounded"><PencilSimple size={18} /></button>
-                              <button onClick={() => { if (!isPremiumUnlocked) return toast.error("Borrar es Premium"); setShowDeleteConfirm(record.id); }} className="p-1 hover:bg-red-50 rounded"><Trash size={18} className="text-red-500" /></button>
+                              <button
+                                onClick={() => { if (!isPremiumUnlocked) return; setSelectedRecord(record); setShowForm(true); }}
+                                className="p-1 hover:bg-slate-100 rounded disabled:opacity-40 disabled:cursor-not-allowed"
+                                disabled={!isPremiumUnlocked}
+                                title={isPremiumUnlocked ? "Editar registro" : "Disponible solo en Premium"}
+                              >
+                                <PencilSimple size={18} />
+                              </button>
+                              <button
+                                onClick={() => { if (!isPremiumUnlocked) return; setShowDeleteConfirm(record.id); }}
+                                className="p-1 hover:bg-red-50 rounded disabled:opacity-40 disabled:cursor-not-allowed"
+                                disabled={!isPremiumUnlocked}
+                                title={isPremiumUnlocked ? "Eliminar registro" : "Disponible solo en Premium"}
+                              >
+                                <Trash size={18} className="text-red-500" />
+                              </button>
                             </div>
                           </td>
                         )}
