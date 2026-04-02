@@ -98,10 +98,10 @@
     ],
     "extraResources": [
       {
-        "from": "../backend",
-        "to": "backend",
+        "from": "../resources",
+        "to": "resources",
         "filter": [
-          "**/*"
+          "quimbar-server.exe"
         ]
       }
     ],

@@ -57,7 +57,7 @@ const apiRequest = async (method, path, options = {}) => {
   let lastError;
   for (const baseUrl of API_CANDIDATES) {
     try {
-      return await axios({ method, url: `${baseUrl}${normalizedPath}`, ...options });
+      return await axios({ method, url: `${baseUrl}${normalizedPath}`, timeout: 4000, ...options });
     } catch (error) {
       lastError = error;
       if (error?.response?.status !== 404) {
@@ -239,6 +239,7 @@ function App() {
   const [premiumFilters, setPremiumFilters] = useState({ from: "", to: "", transportista: "", servicio: "", status: "Todos" });
   const [selectedIds, setSelectedIds] = useState([]);
   const [dataMode, setDataMode] = useState("local");
+  const [serverBooting, setServerBooting] = useState(true);
 
   useEffect(() => localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(records)), [records]);
   useEffect(() => localStorage.setItem(STORAGE_KEYS.uploads, JSON.stringify(uploads)), [uploads]);
@@ -253,14 +254,21 @@ function App() {
 
   useEffect(() => {
     const loadFromBackend = async () => {
-      try {
-        const [recordsRes, uploadsRes] = await Promise.all([apiRequest("get", "/records"), apiRequest("get", "/uploads")]);
-        setRecords(recordsRes.data || []);
-        setUploads(uploadsRes.data || []);
-        setDataMode("backend");
-      } catch {
-        setDataMode("local");
+      const maxAttempts = 8;
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+          const [recordsRes, uploadsRes] = await Promise.all([apiRequest("get", "/records"), apiRequest("get", "/uploads")]);
+          setRecords(recordsRes.data || []);
+          setUploads(uploadsRes.data || []);
+          setDataMode("backend");
+          setServerBooting(false);
+          return;
+        } catch {
+          await new Promise((resolve) => setTimeout(resolve, 900));
+        }
       }
+      setDataMode("local");
+      setServerBooting(false);
     };
     loadFromBackend();
   }, []);
@@ -581,7 +589,11 @@ function App() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Sistema de Quimbar</h1>
             <p className="text-sm text-slate-500">
-              {dataMode === "backend" ? "Modo backend automático (sin arrancarlo manualmente)" : "Modo local de respaldo"} • Gestión de Registros
+              {serverBooting
+                ? "Iniciando servidor local en 127.0.0.1:8000..."
+                : dataMode === "backend"
+                  ? "Modo backend automático (127.0.0.1:8000)"
+                  : "Modo local de respaldo"} • Gestión de Registros
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
