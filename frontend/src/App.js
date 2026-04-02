@@ -79,6 +79,37 @@ const formatCurrency = (value) => new Intl.NumberFormat("es-MX", { style: "curre
 const formatDate = (dateStr) => (!dateStr ? "-" : new Date(dateStr).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" }));
 const toNumber = (value) => Number.parseFloat(value || 0) || 0;
 const todayISO = () => new Date().toISOString().split("T")[0];
+const normalizeHeader = (value) => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+
+const parseAmount = (value) => {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const cleaned = String(value).replace(/\$/g, "").replace(/,/g, "").trim();
+  if (!cleaned || cleaned === "-") return 0;
+  const parsed = Number.parseFloat(cleaned);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const parseExcelDate = (value) => {
+  if (!value && value !== 0) return todayISO();
+  if (typeof value === "number") {
+    const parsed = XLSX.SSF.parse_date_code(value);
+    if (parsed && parsed.y && parsed.m && parsed.d) {
+      return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
+    }
+  }
+  const asDate = new Date(value);
+  if (!Number.isNaN(asDate.getTime())) return asDate.toISOString().split("T")[0];
+  return String(value);
+};
+
+const findColumnIndex = (headers, aliases) => {
+  const normalizedAliases = aliases.map((alias) => normalizeHeader(alias));
+  return headers.findIndex((header) => {
+    if (!header) return false;
+    return normalizedAliases.some((alias) => header === alias || header.startsWith(alias) || alias.startsWith(header));
+  });
+};
 
 const readJSON = (key, fallback) => {
   try {
@@ -376,10 +407,69 @@ function App() {
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          const wb = XLSX.read(event.target?.result, { type: "binary" });
+          const wb = XLSX.read(event.target?.result, { type: "binary", cellDates: true });
           const ws = wb.Sheets[wb.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
-          resolve(rows);
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+          const aliases = {
+            fecha: ["fecha", "date"],
+            costo_t: ["costo t", "costot", "costo transporte", "costo"],
+            transportista: ["transportista", "transporter", "carrier", "transporte", "transport"],
+            servicio: ["servicio", "service", "descripcion", "cliente"],
+            costo_l: ["costo l", "costol", "costo local", "costo"],
+            status: ["status", "estado", "estatus", "statu"],
+            total: ["total", "tota"],
+            saldo_a_favor: ["saldo a favor", "saldo", "balance", "saldoafavor"]
+          };
+
+          let headerRowIndex = 0;
+          let bestScore = -1;
+          for (let i = 0; i < Math.min(rows.length, 25); i += 1) {
+            const normalized = (rows[i] || []).map((cell) => normalizeHeader(cell));
+            const score = normalized.filter((cell) => ["fecha", "costo", "transportista", "transport", "servicio", "status", "estado", "total"].includes(cell)).length;
+            if (score > bestScore) {
+              bestScore = score;
+              headerRowIndex = i;
+            }
+          }
+
+          const normalizedHeaders = (rows[headerRowIndex] || []).map((cell) => normalizeHeader(cell));
+          const col = Object.fromEntries(Object.entries(aliases).map(([key, names]) => [key, findColumnIndex(normalizedHeaders, names)]));
+          const costoCandidates = normalizedHeaders
+            .map((header, index) => (header.startsWith("costo") ? index : -1))
+            .filter((index) => index >= 0);
+
+          if (col.costo_t === col.costo_l && costoCandidates.length >= 2) {
+            col.costo_t = costoCandidates[0];
+            col.costo_l = costoCandidates[1];
+          } else if (col.costo_t === col.costo_l) {
+            col.costo_l = -1;
+          }
+
+          const importedRows = rows
+            .slice(headerRowIndex + 1)
+            .filter((row) => row.some((value) => String(value || "").trim() !== ""))
+            .filter((row) => !/total\s*(pendiente|pagado|general)/i.test(row.map((value) => String(value || "")).join(" ")))
+            .map((row) => {
+              const costo_t = col.costo_t >= 0 ? parseAmount(row[col.costo_t]) : 0;
+              const costo_l = col.costo_l >= 0 ? parseAmount(row[col.costo_l]) : 0;
+              const totalFromSheet = col.total >= 0 ? parseAmount(row[col.total]) : 0;
+              const statusRaw = col.status >= 0 ? String(row[col.status] || "") : "";
+              const status = /^pagado$/i.test(statusRaw.trim()) ? "Pagado" : "Pendiente";
+              return normalizeRecord({
+                id: crypto.randomUUID(),
+                fecha: col.fecha >= 0 ? parseExcelDate(row[col.fecha]) : todayISO(),
+                transportista: col.transportista >= 0 ? String(row[col.transportista] || "").trim() : "",
+                servicio: col.servicio >= 0 ? String(row[col.servicio] || "").trim() : "",
+                costo_t,
+                costo_l,
+                total: totalFromSheet > 0 ? totalFromSheet : (Math.abs(costo_t - costo_l) < 1e-9 ? costo_t : (costo_t + costo_l)),
+                status,
+                saldo_a_favor: col.saldo_a_favor >= 0 ? parseAmount(row[col.saldo_a_favor]) : 0
+              });
+            })
+            .filter((record) => record.transportista || record.servicio || record.costo_t > 0 || record.costo_l > 0 || record.saldo_a_favor > 0);
+
+          resolve(importedRows);
         } catch (error) {
           reject(error);
         }
@@ -391,6 +481,11 @@ function App() {
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (serverBooting) {
+      toast.info("Espera un momento a que termine de iniciar el servidor y vuelve a subir el archivo.");
+      e.target.value = "";
+      return;
+    }
     setUploading(true);
     try {
       if (dataMode === "backend") {
@@ -403,8 +498,7 @@ function App() {
         await reloadBackendData();
         toast.success(`${response.data?.records_imported || 0} registros importados`);
       } else {
-        const rows = await parseExcelFile(file);
-        const imported = rows.map((row, idx) => normalizeRecord(row, crypto.randomUUID() || `${Date.now()}-${idx}`));
+        const imported = await parseExcelFile(file);
         setRecords((prev) => [...imported, ...prev]);
         setUploads((prev) => [{ id: crypto.randomUUID(), filename: file.name, uploaded_at: new Date().toISOString(), records_count: imported.length, records_snapshot: imported }, ...prev]);
         toast.success(`${imported.length} registros importados localmente`);
