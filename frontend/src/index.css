@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --font-heading: 'IBM Plex Sans', sans-serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: #F8FAFC;
+    color: #0A0A0A;
+}
+
+code {
+    font-family: var(--font-mono);
+}
+
+@layer base {
+    :root {
+        --background: 210 40% 98%;
+        --foreground: 0 0% 4%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 4%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 4%;
+        --primary: 224 100% 33%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 214 32% 91%;
+        --secondary-foreground: 222 47% 11%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215 16% 47%;
+        --accent: 210 40% 96%;
+        --accent-foreground: 0 0% 4%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 214 32% 81%;
+        --input: 214 32% 81%;
+        --ring: 224 100% 33%;
+        --chart-1: 12 76% 61%;
+        --chart-2: 173 58% 39%;
+        --chart-3: 197 37% 24%;
+        --chart-4: 43 74% 66%;
+        --chart-5: 27 87% 67%;
+        --radius: 0.125rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+/* Table styles */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    background: #F1F5F9;
+    border-bottom: 1px solid #CBD5E1;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748B;
+    padding: 0.75rem 1rem;
+    text-align: left;
+}
+
+.data-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #E2E8F0;
+    font-size: 0.875rem;
+}
+
+.data-table tr:hover {
+    background: #F8FAFC;
+}
+
+.data-table tr:nth-child(even) {
+    background: rgba(241, 245, 249, 0.5);
+}
+
+/* Tabular numbers for financial data */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono);
+}
+
+/* Status badges */
+.badge-pending {
+    background: #FEE2E2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+    padding: 0.25rem 0.5rem;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-paid {
+    background: #D1FAE5;
+    color: #047857;
+    border: 1px solid #A7F3D0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Upload zone */
+.upload-zone {
+    border: 2px dashed #CBD5E1;
+    background: #F8FAFC;
+    transition: all 0.2s ease;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+    border-color: #002FA7;
+    background: #EFF6FF;
+}
+
+/* PWA install prompt */
+.pwa-install-prompt {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 1px solid #CBD5E1;
+    padding: 1rem 1.5rem;
+    border-radius: 2px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+}

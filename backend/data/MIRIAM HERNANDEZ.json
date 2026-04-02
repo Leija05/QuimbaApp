@@ -1,0 +1,484 @@
+[
+    {
+        "id": "59e28410-27b5-4a8c-98f9-f1803f014cea",
+        "carta_porte": "STATUS",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226335+00:00",
+        "priv_zaragoza_1304": "FECHA",
+        "col_2": "COSTO",
+        "col_3": "CARTA PORTE",
+        "col_4": "SERVICIO",
+        "867_318-1488": "SHIPMENT",
+        "jaqtransporte@gmail.com": "STATUS",
+        "col_7": "TOTAL"
+    },
+    {
+        "id": "4950b730-3813-4815-a7e4-1f04e0bc4d8b",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226360+00:00",
+        "col_0": 1,
+        "col_7": 0
+    },
+    {
+        "id": "66625150-80fd-4d70-98da-06cd97c053ad",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226373+00:00",
+        "col_0": 2,
+        "col_7": 0
+    },
+    {
+        "id": "9ed5567d-f8b4-4711-b5ba-cf59d34d7781",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226387+00:00",
+        "col_0": 3,
+        "col_7": 0
+    },
+    {
+        "id": "397be362-d352-40b3-bff7-ab6adc114019",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226398+00:00",
+        "col_0": 4,
+        "col_7": 0
+    },
+    {
+        "id": "60cf4286-d202-4c3e-8389-39bb639e2bcd",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226408+00:00",
+        "col_0": 5,
+        "col_7": 0
+    },
+    {
+        "id": "82eb06dc-d7b4-4ceb-8f4b-6250c642356d",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226418+00:00",
+        "col_0": 6,
+        "col_7": 0
+    },
+    {
+        "id": "ae29af87-0893-4059-a102-3927adc9506f",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226429+00:00",
+        "col_0": 7,
+        "col_7": 0
+    },
+    {
+        "id": "c8c8317f-edfb-4235-9e4e-484b843595af",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226439+00:00",
+        "col_0": 8,
+        "col_7": 0
+    },
+    {
+        "id": "d4125201-360f-4fb5-9fe0-2ac6cb8c99c0",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226449+00:00",
+        "col_0": 9,
+        "col_7": 0
+    },
+    {
+        "id": "b1d90013-0550-43db-9dc4-f1747eb2ec22",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226459+00:00",
+        "col_0": 10,
+        "col_7": 0
+    },
+    {
+        "id": "f0b46ab6-5227-47b6-a345-da4daf449a23",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226468+00:00",
+        "col_0": 11,
+        "col_7": 0
+    },
+    {
+        "id": "4b1a218a-e5bd-49e2-a523-fcd8336dc378",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226478+00:00",
+        "col_0": 12,
+        "col_7": 0
+    },
+    {
+        "id": "c945a413-e508-49bb-a233-a599481ecb43",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226488+00:00",
+        "col_0": 13,
+        "col_7": 0
+    },
+    {
+        "id": "347987de-d0cd-448b-8c1a-9b9c6e6b2b7b",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226498+00:00",
+        "col_0": 14,
+        "col_7": 0
+    },
+    {
+        "id": "d5d178f5-dfaf-4cf7-9c3a-af6ab9a69cbd",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226507+00:00",
+        "col_0": 15,
+        "col_7": 0
+    },
+    {
+        "id": "88d89818-630b-47ae-99ae-d6f48dc1dafb",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226523+00:00",
+        "col_0": 16,
+        "col_7": 0
+    },
+    {
+        "id": "e16af93f-545a-4aa7-bbc4-1588611ecd4e",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226533+00:00",
+        "col_0": 17,
+        "col_7": 0
+    },
+    {
+        "id": "750c6cc5-737e-4edd-8d24-cc13deecf164",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226543+00:00",
+        "col_0": 18,
+        "col_7": 0
+    },
+    {
+        "id": "73a408ea-12ac-4c81-8f09-3d68706ff0bc",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226552+00:00",
+        "col_0": 19,
+        "col_7": 0
+    },
+    {
+        "id": "d5d07a1e-f0a9-4a3e-a776-05fffdda2001",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226563+00:00",
+        "col_0": 20,
+        "col_7": 0
+    },
+    {
+        "id": "3e12d537-17de-4a9a-b4e1-6fff71023e20",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226572+00:00",
+        "col_0": 21,
+        "col_7": 0
+    },
+    {
+        "id": "3acfabd9-1424-41b3-a352-0c6e40deb704",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226582+00:00",
+        "col_0": 22,
+        "col_7": 0
+    },
+    {
+        "id": "997ab9d3-b809-4fae-a42c-b92f49a722ac",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226591+00:00",
+        "col_0": 23,
+        "col_7": 0
+    },
+    {
+        "id": "be6bfe7d-0527-4bb4-abf4-fdf9b18917d9",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226601+00:00",
+        "col_0": 24,
+        "col_7": 0
+    },
+    {
+        "id": "40efd8e3-22ac-4800-a32d-90ac0277c079",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226610+00:00",
+        "col_0": 25,
+        "col_7": 0
+    },
+    {
+        "id": "c14cd824-03fb-4777-ad5e-635d3d594750",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226620+00:00",
+        "col_0": 26,
+        "col_7": 0
+    },
+    {
+        "id": "a0940330-b0dd-4746-8a14-73f1f415ea5d",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226629+00:00",
+        "col_0": 27,
+        "col_7": 0
+    },
+    {
+        "id": "32f76686-c086-4c5a-b684-f703417b571b",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226639+00:00",
+        "col_0": 28,
+        "col_7": 0
+    },
+    {
+        "id": "65f9df13-65d3-467a-876f-851a24155458",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226648+00:00",
+        "col_0": 29,
+        "col_7": 0
+    },
+    {
+        "id": "9cea67d3-f1ac-4799-b00a-f764649c00a4",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226658+00:00",
+        "col_0": 30,
+        "col_7": 0
+    },
+    {
+        "id": "06f7565c-b6c6-4b06-8e79-19ee5c982ccc",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226668+00:00",
+        "col_0": 31,
+        "col_7": 0
+    },
+    {
+        "id": "99ed46a4-a8df-44f8-8b26-4bf98343dc46",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226678+00:00",
+        "col_0": 32,
+        "col_7": 0
+    },
+    {
+        "id": "7627abf6-1d74-4fe2-b13b-3275a651236d",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226688+00:00",
+        "col_0": 33,
+        "col_7": 0
+    },
+    {
+        "id": "9b6153c9-9df6-4f29-ac91-8da157813cad",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226698+00:00",
+        "col_0": 34,
+        "col_7": 0
+    },
+    {
+        "id": "80c3e34e-6d4e-41eb-af35-657dd050373e",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226707+00:00",
+        "col_0": 35,
+        "col_7": 0
+    },
+    {
+        "id": "b187a519-3bf8-4c02-b765-a3f47ac8a72a",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226717+00:00",
+        "col_0": 36,
+        "col_7": 0
+    },
+    {
+        "id": "bab61c6a-305c-4adf-b211-275fac5e7022",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226727+00:00",
+        "col_0": 37,
+        "col_7": 0
+    },
+    {
+        "id": "c80a98c2-44c3-4b69-af61-afca4ac5a24a",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226736+00:00",
+        "col_0": 38,
+        "col_7": 0
+    },
+    {
+        "id": "84b1995a-aa18-40e6-b86c-4102163a379f",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226746+00:00",
+        "col_0": 39,
+        "col_7": 0
+    },
+    {
+        "id": "dd70540b-f0b2-48f2-a81a-25d493892089",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226756+00:00",
+        "col_0": 40,
+        "col_7": 0
+    },
+    {
+        "id": "70f40583-a1d1-49e4-bce4-545fafc24d8c",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226765+00:00",
+        "col_0": 41,
+        "col_7": 0
+    },
+    {
+        "id": "f5f240ee-d165-4f55-9ad6-4c672f0a57ea",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226778+00:00",
+        "col_0": 42,
+        "col_7": 0
+    },
+    {
+        "id": "a9d5b029-f2c4-4ab8-af9d-8073d9cda7d2",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226788+00:00",
+        "col_0": 43,
+        "col_7": 0
+    },
+    {
+        "id": "269cab93-ba81-416b-bf03-6feb92366c74",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226797+00:00",
+        "col_0": 44,
+        "col_7": 0
+    },
+    {
+        "id": "412e93ad-d36c-4aa4-b55d-3df4d1936394",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226807+00:00",
+        "col_0": 45,
+        "col_7": 0
+    },
+    {
+        "id": "3ec6429a-caee-4be1-b0de-e0bab294c858",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226816+00:00",
+        "col_0": 46,
+        "col_7": 0
+    },
+    {
+        "id": "06d323b2-6a9e-44c1-aac3-f684cdd34964",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226826+00:00",
+        "col_0": 47,
+        "col_7": 0
+    },
+    {
+        "id": "f6827536-2cbf-41a0-9989-7476d05237a9",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226837+00:00",
+        "col_0": 48,
+        "col_7": 0
+    },
+    {
+        "id": "8f8d9edb-dc2f-45a1-8be1-1fd2ee8db06b",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226846+00:00",
+        "col_0": 49,
+        "col_7": 0
+    },
+    {
+        "id": "4db490a1-b119-4fdf-9372-76857d314a3c",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226856+00:00",
+        "col_0": 50,
+        "col_7": 0
+    },
+    {
+        "id": "3f0086fa-518f-4e29-a30d-b5704a42f325",
+        "carta_porte": "TOTAL PENDIENTE",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226871+00:00",
+        "jaqtransporte@gmail.com": "TOTAL PENDIENTE",
+        "col_7": 0
+    },
+    {
+        "id": "75f1f139-2eef-42e4-a3d7-bf46305081fc",
+        "carta_porte": "TOTAL PAGADO",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.226885+00:00",
+        "jaqtransporte@gmail.com": "TOTAL PAGADO",
+        "col_7": 0
+    }
+]

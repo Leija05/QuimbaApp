@@ -1,0 +1,78 @@
+[
+    {
+        "id": "8dc904ee-88da-4308-ba1a-86384597a264",
+        "carta_porte": "STATUS",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.236424+00:00",
+        "priv_zaragoza_1304": "FECHA",
+        "col_2": "COSTO",
+        "col_3": "CARTA PORTE",
+        "col_4": "SERVICIO",
+        "867_318-1488": "SHIPMENT",
+        "jaqtransporte@gmail.com": "STATUS",
+        "col_7": "TOTAL"
+    },
+    {
+        "id": "eb8f241d-6d7e-4328-8d2e-abb96eacde22",
+        "carta_porte": "PAGADO",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.236438+00:00",
+        "col_0": 1,
+        "priv_zaragoza_1304": "2025-08-30",
+        "col_2": 6000,
+        "col_4": "LIMPIEZA DE PATIO RYDER (UREA)",
+        "jaqtransporte@gmail.com": "PAGADO",
+        "col_7": 6000
+    },
+    {
+        "id": "982b03b4-0ce2-4228-babe-9325561bff31",
+        "carta_porte": "COTIZACION",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.236452+00:00",
+        "col_0": 2,
+        "priv_zaragoza_1304": "2025-09-01",
+        "col_2": 16000,
+        "col_4": "LIMPIEZA DE PATIO RYDER Y REMOSION DE ESCOMBRO",
+        "jaqtransporte@gmail.com": "COTIZACION",
+        "col_7": 16000
+    },
+    {
+        "id": "3fab1f2d-4a4d-454e-a462-33743ac37883",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.236463+00:00",
+        "col_0": 3,
+        "col_2": 45
+    },
+    {
+        "id": "0e6761a9-dd77-4013-93cb-21363bfe0b0c",
+        "carta_porte": "",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.236599+00:00",
+        "col_0": 37,
+        "col_7": 22000
+    },
+    {
+        "id": "6cd862a0-0f6d-4830-89f1-c76630e3d639",
+        "carta_porte": "TOTAL PENDIENTE",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.236614+00:00",
+        "jaqtransporte@gmail.com": "TOTAL PENDIENTE",
+        "col_7": 16000
+    },
+    {
+        "id": "a577776f-4bc4-4e18-9de9-54414f2a6d09",
+        "carta_porte": "TOTAL PAGADO",
+        "status": "Pendiente",
+        "total": 0,
+        "created_at": "2026-04-01T05:22:44.236628+00:00",
+        "jaqtransporte@gmail.com": "TOTAL PAGADO",
+        "col_7": 6000
+    }
+]

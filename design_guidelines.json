@@ -1,0 +1,117 @@
+{
+  "theme": "light",
+  "archetype": "4 - Swiss & High-Contrast",
+  "mood": "Objective, rigid, functional, precise, data-dense.",
+  "colors": {
+    "background": "#F8FAFC",
+    "foreground": "#0A0A0A",
+    "primary": "#002FA7",
+    "primary_foreground": "#FFFFFF",
+    "secondary": "#E2E8F0",
+    "secondary_foreground": "#0F172A",
+    "accent": "#F1F5F9",
+    "accent_foreground": "#0A0A0A",
+    "muted": "#F1F5F9",
+    "muted_foreground": "#64748B",
+    "border": "#CBD5E1",
+    "status": {
+      "pending": "#EF4444",
+      "paid": "#10B981",
+      "warning": "#F59E0B"
+    }
+  },
+  "typography": {
+    "font_family": {
+      "heading": "Cabinet Grotesk, sans-serif",
+      "body": "IBM Plex Sans, sans-serif",
+      "mono": "IBM Plex Mono, monospace"
+    },
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl font-black tracking-tighter text-[#0A0A0A]",
+      "h2": "text-2xl sm:text-3xl font-bold tracking-tight text-[#0A0A0A]",
+      "h3": "text-xl sm:text-2xl font-semibold tracking-tight text-[#0A0A0A]",
+      "body": "text-sm sm:text-base text-[#0A0A0A] leading-relaxed",
+      "mono_numbers": "font-mono text-sm sm:text-base font-medium tabular-nums",
+      "labels": "text-xs font-semibold uppercase tracking-[0.2em] text-slate-500"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Strict grid hierarchy, dense and compact spacing for data visibility. Every pixel utilized.",
+    "container": "w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8",
+    "grid_strategy": "The 'Control Room' grid: grid-cols-1 md:grid-cols-3 lg:grid-cols-4. Tight gaps (gap-4 or gap-6). Use h-full to prevent jagged bottoms.",
+    "radius": "rounded-sm (2px) or rounded-none to maintain brutalist, sharp precision.",
+    "borders": "Expose the skeleton. Heavy use of 1px border-slate-300 on containers, grid items, and tables to create defined boundaries."
+  },
+  "components": {
+    "tables": {
+      "structure": "HTML/Tailwind or Shadcn Table. border-collapse. Full width.",
+      "header": "bg-slate-100 border-b border-slate-300 text-xs font-semibold uppercase tracking-wider text-slate-600",
+      "rows": "border-b border-slate-200 hover:bg-slate-50 transition-colors",
+      "cells": "p-3 sm:p-4 text-sm align-middle",
+      "numeric_cells": "text-right font-mono tabular-nums",
+      "alternating_rows": "Use zebra stripes (even:bg-slate-50/50) for scanability in dense datasets."
+    },
+    "cards": {
+      "usage": "Use for Summary Metrics (Totals, Pending, Paid).",
+      "style": "bg-white border border-slate-300 p-6 rounded-sm shadow-sm",
+      "hover": "hover:border-[#002FA7] transition-colors duration-200"
+    },
+    "forms": {
+      "inputs": "Shadcn input. border-slate-300 bg-white rounded-sm focus:ring-2 focus:ring-[#002FA7] focus:border-[#002FA7]",
+      "labels": "text-sm font-semibold mb-1 text-slate-700 block",
+      "buttons": "bg-[#002FA7] hover:bg-[#002277] text-white font-medium px-6 py-2 rounded-sm shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2"
+    },
+    "navigation": {
+      "pwa_mobile": "Fixed bottom navigation bar for mobile (PWA). bg-white border-t border-slate-300 flex justify-around p-3 pb-safe z-50",
+      "desktop": "Sidebar or top fixed nav with clear distinction from content body. border-r border-slate-300"
+    },
+    "badges": {
+      "pending": "bg-red-100 text-red-700 border border-red-200 px-2 py-1 rounded-sm text-xs font-semibold",
+      "paid": "bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-sm text-xs font-semibold",
+      "default": "bg-slate-100 text-slate-700 border border-slate-200 px-2 py-1 rounded-sm text-xs font-semibold"
+    }
+  },
+  "interactions": {
+    "hover_states": "Buttons darken slightly. Links gain an underline or change to primary color. Table rows highlight with light slate.",
+    "focus": "High contrast focus rings. focus:ring-2 focus:ring-[#002FA7] focus:ring-offset-2",
+    "animations": "Keep animations minimal and snappy. Only micro-interactions (e.g. active tab line sliding)."
+  },
+  "icons": {
+    "library": "Phosphor Icons",
+    "style": "Duotone or bold depending on the active state. Clean, geometric to match the brutalist grid."
+  },
+  "media_and_images": {
+    "urls": {
+      "login_background": {
+        "url": "https://images.unsplash.com/photo-1592481082893-ed54a46852cc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwxfHxsb2dpc3RpY3MlMjBjb250YWluZXIlMjB0cnVjayUyMG1pbmltYWx8ZW58MHx8fHwxNzc0OTk4NTU0fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Grayscale photo of logistics container. Use for login page background overlay.",
+        "usage": "Login Page Background"
+      },
+      "default_avatar_1": {
+        "url": "https://images.unsplash.com/photo-1581841064838-a470c740e8ee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA4Mzl8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBhdmF0YXIlMjBwb3J0cmFpdHxlbnwwfHx8fDE3NzQ5OTg1NTV8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Professional avatar for admin user.",
+        "usage": "Top right nav avatar"
+      },
+      "abstract_shape": {
+        "url": "https://images.pexels.com/photos/4252898/pexels-photo-4252898.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Minimalist geometric pattern.",
+        "usage": "Subtle background texture for summary cards (opacity-5)"
+      }
+    },
+    "rules": "Never use placeholder images. If no image is needed, use a solid color background with a subtle grid pattern."
+  },
+  "accessibility_and_testing": {
+    "contrast": "Must meet minimum 4.5:1 ratio for standard text. Use text shadow over images.",
+    "data_testid": "All interactive elements (buttons, inputs, tabs, export buttons, rows) MUST include a kebab-case data-testid attribute.",
+    "table_scrolling": "Tables must have horizontal scroll on smaller screens with sticky first column if possible."
+  },
+  "instructions_to_main_agent": [
+    "Run: yarn add @phosphor-icons/react",
+    "Implement the 'Control Room' grid for the dashboard view. Avoid using standard rounded Shadcn cards; override to rounded-sm or rounded-none.",
+    "Use Phosphor icons for navigation and actions.",
+    "For tabular financial data (Total, Saldo a Favor, Costo), ALWAYS use tabular-nums utility class with a monospace font like IBM Plex Mono.",
+    "Ensure the application behaves as a PWA (manifest, service worker for offline). Add a bottom nav bar for mobile views.",
+    "Create 4 distinct tabs/sections: Archivo Principal (with pending/paid totals), Transporte (Filtered by Date/Transportista/Costo), Cliente (Filtered with Total Pending), Gestión de Datos (Add/Edit Form).",
+    "Integrate file upload for Excel parsing and export functionalities for Excel/PDF. Ensure upload zone matches the sharp, corporate aesthetics with a dashed border and clear instructions."
+  ]
+}
