@@ -5,36 +5,22 @@ const isDev = !app.isPackaged;
 
 let backendProcess = null;
 
-function resolveBackendScriptPath() {
+function resolveBackendExecutablePath() {
   if (isDev) {
-    return path.join(__dirname, '../../backend/server.py');
+    return path.join(__dirname, '../../resources/quimbar-server.exe');
   }
-  return path.join(process.resourcesPath, 'backend/server.py');
-}
-
-function launchBackendWith(command, args = []) {
-  const backendScriptPath = resolveBackendScriptPath();
-  const processArgs = [...args, backendScriptPath];
-
-  return spawn(command, processArgs, {
-    stdio: ['ignore', 'pipe', 'pipe'],
-    windowsHide: true,
-    env: {
-      ...process.env,
-      PYTHONUNBUFFERED: '1',
-    },
-  });
+  return path.join(process.resourcesPath, 'resources', 'quimbar-server.exe');
 }
 
 function startBackend() {
-  const primaryCommand = process.env.QUIMBAR_PYTHON_BIN || (process.platform === 'win32' ? 'py' : 'python3');
-  const primaryArgs = process.platform === 'win32' && primaryCommand === 'py' ? ['-3'] : [];
-  backendProcess = launchBackendWith(primaryCommand, primaryArgs);
-
-  backendProcess.once('error', () => {
-    if (primaryCommand !== 'python') {
-      backendProcess = launchBackendWith('python');
-    }
+  const backendExecutablePath = resolveBackendExecutablePath();
+  backendProcess = spawn(backendExecutablePath, [], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+    env: process.env,
+  });
+  backendProcess.once('error', (error) => {
+    console.error('No se pudo iniciar quimbar-server.exe:', error);
   });
 }
 
