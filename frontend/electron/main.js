@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const isDev = !app.isPackaged;
 
 let backendProcess = null;
+let backendStartupIssue = '';
 
 function resolveBackendExecutablePath() {
   if (isDev) {
@@ -16,7 +17,8 @@ function resolveBackendExecutablePath() {
 function startBackend() {
   const backendExecutablePath = resolveBackendExecutablePath();
   if (!fs.existsSync(backendExecutablePath)) {
-    console.error('No existe quimbar-server.exe en:', backendExecutablePath);
+    backendStartupIssue = `No existe quimbar-server.exe en: ${backendExecutablePath}`;
+    console.error(backendStartupIssue);
     return;
   }
 
@@ -27,7 +29,13 @@ function startBackend() {
     env: process.env,
   });
   backendProcess.once('error', (error) => {
+    backendStartupIssue = `Error al iniciar quimbar-server.exe: ${error?.message || String(error)}`;
     console.error('No se pudo iniciar quimbar-server.exe:', error);
+  });
+  backendProcess.once('exit', (code, signal) => {
+    if (code !== 0) {
+      backendStartupIssue = `quimbar-server.exe terminó al iniciar (code=${code}, signal=${signal || 'none'})`;
+    }
   });
   backendProcess.stdout?.on('data', () => {});
   backendProcess.stderr?.on('data', () => {});
@@ -91,15 +99,17 @@ function createWindow() {
 app.whenReady().then(async () => {
   startBackend();
   const ready = await waitForBackendReady();
-  if (!ready) {
-    dialog.showErrorBox(
-      'Error de servidor local',
-      'No se pudo iniciar quimbar-server.exe en 127.0.0.1:8000. Reinstala o abre de nuevo la aplicación.'
-    );
-    app.quit();
-    return;
-  }
   createWindow();
+  if (!ready) {
+    const extra = backendStartupIssue ? `\n\nDetalle técnico:\n${backendStartupIssue}` : '';
+    dialog.showMessageBox({
+      type: 'warning',
+      title: 'Servidor local no disponible',
+      message: 'No se pudo iniciar quimbar-server.exe en 127.0.0.1:8000.',
+      detail: `La aplicación se abrirá, pero no podrá operar hasta que el servidor local esté activo.\n\nPasos:\n1) Ejecuta la app como administrador.\n2) Verifica que tu antivirus no bloquee quimbar-server.exe.\n3) Reinstala la app para restaurar el ejecutable.${extra}`,
+      buttons: ['Aceptar'],
+    });
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
