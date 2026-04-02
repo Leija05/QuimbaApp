@@ -371,3 +371,57 @@
     border-color: #334155;
     color: #E2E8F0;
 }
+
+.premium-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+    .premium-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.premium-card {
+    background: #fff;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 0.9rem;
+    font-size: 0.85rem;
+    color: #334155;
+}
+
+.premium-card h3 {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+}
+
+.premium-toolbar {
+    border: 1px dashed #94A3B8;
+    border-radius: 6px;
+    background: #F8FAFC;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.premium-filters,
+.premium-bulk {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.app-container.dark-theme .premium-card,
+.app-container.dark-theme .premium-toolbar {
+    background: #111827;
+    border-color: #334155;
+    color: #E2E8F0;
+}

@@ -29,6 +29,14 @@ next-env.d.ts
 /build
 dist/
 dist
+# PyInstaller
+build/
+dist/
+*.spec
+*.pyz
+*.pyc
+__pycache__/
+
 
 # Environment files (comprehensive coverage)
 
