@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import "@/App.css";
-import { Toaster, toast } from "sonner";
 import axios from "axios";
 import {
   Files,
@@ -236,6 +235,12 @@ function App() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [serverBooting, setServerBooting] = useState(true);
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [noticeModal, setNoticeModal] = useState({ open: false, title: "", message: "" });
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
+  const [showFavoriteFilterModal, setShowFavoriteFilterModal] = useState(false);
+  const [favoriteFilterInput, setFavoriteFilterInput] = useState("");
+
+  const showNotice = (message, title = "Aviso") => setNoticeModal({ open: true, title, message });
 
   useEffect(() => localStorage.setItem(STORAGE_KEYS.favoriteFilters, JSON.stringify(favoriteFilters)), [favoriteFilters]);
   useEffect(() => localStorage.setItem(STORAGE_KEYS.theme, darkMode ? "dark" : "light"), [darkMode]);
@@ -258,7 +263,7 @@ function App() {
       }
       setBackendAvailable(false);
       setServerBooting(false);
-      toast.error("No se pudo conectar con quimbar-server.exe. Reinicia la app.");
+      showNotice("No se pudo conectar con quimbar-server.exe. Reinicia la app.", "Error");
     };
     loadFromBackend();
   }, []);
@@ -336,35 +341,35 @@ function App() {
         await apiRequest("post", "/records", { data });
       }
       await reloadBackendData();
-      toast.success(selectedRecord ? "Registro actualizado" : "Registro creado");
+      showNotice(selectedRecord ? "Registro actualizado" : "Registro creado", "Éxito");
       setShowForm(false);
       setSelectedRecord(null);
     } catch {
-      toast.error("No se pudo guardar el registro");
+      showNotice("No se pudo guardar el registro", "Error");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteRecord = async (id) => {
-    if (!isPremiumUnlocked) return toast.error("Borrar registros es Premium");
-    if (!backendAvailable) return toast.error("Servidor no disponible");
+    if (!isPremiumUnlocked) return showNotice("Borrar registros es Premium", "Premium");
+    if (!backendAvailable) return showNotice("Servidor no disponible", "Error");
     await apiRequest("delete", `/records/${id}`);
     await reloadBackendData();
     setShowDeleteConfirm(null);
-    toast.success("Registro eliminado");
+    showNotice("Registro eliminado", "Éxito");
   };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (serverBooting) {
-      toast.info("Espera un momento a que termine de iniciar el servidor y vuelve a subir el archivo.");
+      showNotice("Espera un momento a que termine de iniciar el servidor y vuelve a subir el archivo.", "Servidor iniciando");
       e.target.value = "";
       return;
     }
     if (!backendAvailable) {
-      toast.error("No se detectó quimbar-server.exe en ejecución.");
+      showNotice("No se detectó quimbar-server.exe en ejecución.", "Error");
       e.target.value = "";
       return;
     }
@@ -377,9 +382,9 @@ function App() {
         headers: { "Content-Type": "multipart/form-data" }
       });
       await reloadBackendData();
-      toast.success(`${response.data?.records_imported || 0} registros importados`);
+      showNotice(`${response.data?.records_imported || 0} registros importados`, "Éxito");
     } catch {
-      toast.error("Error al procesar el Excel");
+      showNotice("Error al procesar el Excel", "Error");
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -402,11 +407,11 @@ function App() {
     XLSX.utils.book_append_sheet(wb, ws, "Registros");
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     saveAs(new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `quimbar_${todayISO()}.xlsx`);
-    toast.success("Excel exportado");
+    showNotice("Excel exportado", "Éxito");
   };
 
   const exportToPDF = () => {
-    if (!isPremiumUnlocked) return toast.error("Exportar PDF es Premium");
+    if (!isPremiumUnlocked) return showNotice("Exportar PDF es Premium", "Premium");
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text("Sistema de Quimbar - Reporte", 14, 20);
@@ -416,30 +421,30 @@ function App() {
       body: filteredRecords.map((r) => [r.fecha, r.transportista || "-", r.servicio || "-", r.status, formatCurrency(r.total)])
     });
     doc.save(`quimbar_reporte_${todayISO()}.pdf`);
-    toast.success("PDF exportado");
+    showNotice("PDF exportado", "Éxito");
   };
 
   const handleMassStatusChange = async (status) => {
     if (!selectedIds.length) return;
-    if (!backendAvailable) return toast.error("Servidor no disponible");
+    if (!backendAvailable) return showNotice("Servidor no disponible", "Error");
     const selected = records.filter((r) => selectedIds.includes(r.id));
     await Promise.all(selected.map((record) => apiRequest("put", `/records/${record.id}`, { data: { status } })));
     await reloadBackendData();
-    toast.success(`Se actualizaron ${selectedIds.length} registros`);
+    showNotice(`Se actualizaron ${selectedIds.length} registros`, "Éxito");
   };
 
   const handleMassDelete = async () => {
     if (!selectedIds.length) return;
-    if (!backendAvailable) return toast.error("Servidor no disponible");
+    if (!backendAvailable) return showNotice("Servidor no disponible", "Error");
     await Promise.all(selectedIds.map((id) => apiRequest("delete", `/records/${id}`)));
     await reloadBackendData();
     setSelectedIds([]);
-    toast.success("Registros eliminados por lote");
+    showNotice("Registros eliminados por lote", "Éxito");
   };
 
   const handleMassDuplicate = async () => {
     if (!selectedIds.length) return;
-    if (!backendAvailable) return toast.error("Servidor no disponible");
+    if (!backendAvailable) return showNotice("Servidor no disponible", "Error");
     const selected = records.filter((r) => selectedIds.includes(r.id));
     await Promise.all(selected.map((record) => apiRequest("post", "/records", {
       data: {
@@ -453,34 +458,38 @@ function App() {
       }
     })));
     await reloadBackendData();
-    toast.success(`${selected.length} registros duplicados`);
+    showNotice(`${selected.length} registros duplicados`, "Éxito");
   };
 
   const handleLoadUploadedFile = async (uploadId) => {
     setLoadingUploadId(uploadId);
     if (!backendAvailable) {
       setLoadingUploadId(null);
-      return toast.error("Servidor no disponible");
+      return showNotice("Servidor no disponible", "Error");
     }
     await apiRequest("post", `/uploads/${uploadId}/load`);
     await reloadBackendData();
-    toast.success("Historial cargado");
+    showNotice("Historial cargado", "Éxito");
     setLoadingUploadId(null);
   };
 
   const handleDeleteUploadedFile = async (uploadId) => {
-    if (!backendAvailable) return toast.error("Servidor no disponible");
+    if (!backendAvailable) return showNotice("Servidor no disponible", "Error");
     await apiRequest("delete", `/uploads/${uploadId}`);
     await reloadBackendData();
-    toast.success("Archivo eliminado del historial");
+    showNotice("Archivo eliminado del historial", "Éxito");
   };
 
   const handleClearAllData = async () => {
-    if (!window.confirm("¿Seguro que quieres borrar todos los datos de la app?")) return;
+    setShowClearAllConfirm(true);
+  };
+
+  const confirmClearAllData = async () => {
     setClearingAll(true);
+    setShowClearAllConfirm(false);
     if (!backendAvailable) {
       setClearingAll(false);
-      return toast.error("Servidor no disponible");
+      return showNotice("Servidor no disponible", "Error");
     }
     await Promise.all([apiRequest("delete", "/records"), apiRequest("delete", "/uploads")]);
     await reloadBackendData();
@@ -489,26 +498,32 @@ function App() {
     setStatusFilter("Todos");
     setSelectedIds([]);
     setClearingAll(false);
-    toast.success("Todos los datos fueron eliminados");
+    showNotice("Todos los datos fueron eliminados", "Éxito");
   };
 
   const handleSaveFavoriteFilter = () => {
-    if (!isPremiumUnlocked) return toast.error("Guardar filtros favoritos es Premium");
-    const name = window.prompt("Nombre para este filtro favorito:");
-    if (!name) return;
+    if (!isPremiumUnlocked) return showNotice("Guardar filtros favoritos es Premium", "Premium");
+    setFavoriteFilterInput("");
+    setShowFavoriteFilterModal(true);
+  };
+
+  const confirmSaveFavoriteFilter = () => {
+    const name = favoriteFilterInput.trim();
+    if (!name) return showNotice("Escribe un nombre para el filtro favorito.", "Falta información");
     setFavoriteFilters((prev) => [{ id: crypto.randomUUID(), name, filters: premiumFilters }, ...prev]);
-    toast.success("Filtro favorito guardado");
+    setShowFavoriteFilterModal(false);
+    setFavoriteFilterInput("");
+    showNotice("Filtro favorito guardado", "Éxito");
   };
 
   const handleExportBackup = () => {
     const payload = { version: 1, exported_at: new Date().toISOString(), records, uploads, favoriteFilters };
     saveAs(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }), `quimbar_backup_${todayISO()}.json`);
-    toast.success("Backup exportado");
+    showNotice("Backup exportado", "Éxito");
   };
 
   return (
     <div className={`app-container ${darkMode ? "dark-theme" : ""}`}>
-      <Toaster position="top-right" richColors />
       <header className="app-header">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -725,11 +740,11 @@ function App() {
             <input type="password" value={premiumKeyInput} onChange={(e) => setPremiumKeyInput(e.target.value)} className="form-input w-full" placeholder="Clave Premium" />
             <div className="flex gap-3 mt-4">
               <button className="btn-primary flex-1" onClick={() => {
-                if (premiumKeyInput.trim() !== PREMIUM_ACCESS_KEY) return toast.error("Clave incorrecta");
+                if (premiumKeyInput.trim() !== PREMIUM_ACCESS_KEY) return showNotice("Clave incorrecta", "Error");
                 setIsPremiumUnlocked(true);
                 setShowPremiumModal(false);
                 setPremiumKeyInput("");
-                toast.success("Premium activado");
+                showNotice("Premium activado", "Éxito");
               }}>Activar</button>
               <button className="btn-secondary" onClick={() => setShowPremiumModal(false)}>Cancelar</button>
             </div>
@@ -748,6 +763,52 @@ function App() {
               <button onClick={() => handleDeleteRecord(showDeleteConfirm)} className="btn-danger"><Trash size={20} />Eliminar</button>
               <button onClick={() => setShowDeleteConfirm(null)} className="btn-secondary">Cancelar</button>
             </div>
+          </div>
+        </>
+      )}
+
+      {showClearAllConfirm && (
+        <>
+          <div className="dialog-overlay" onClick={() => setShowClearAllConfirm(false)} />
+          <div className="dialog-content text-center">
+            <Warning size={48} className="mx-auto text-red-500 mb-4" />
+            <h3 className="text-lg font-bold text-slate-900 mb-2">¿Borrar todos los datos?</h3>
+            <p className="text-slate-500 mb-6">Se eliminarán todos los registros e historial de archivos.</p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={confirmClearAllData} className="btn-danger"><Trash size={20} />Sí, borrar todo</button>
+              <button onClick={() => setShowClearAllConfirm(false)} className="btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {showFavoriteFilterModal && (
+        <>
+          <div className="dialog-overlay" onClick={() => setShowFavoriteFilterModal(false)} />
+          <div className="dialog-content">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Guardar filtro favorito</h3>
+            <p className="text-slate-500 mb-4">Escribe un nombre para identificar este filtro.</p>
+            <input
+              className="form-input w-full"
+              value={favoriteFilterInput}
+              onChange={(e) => setFavoriteFilterInput(e.target.value)}
+              placeholder="Ej. Pendientes de abril"
+            />
+            <div className="flex gap-3 justify-end mt-4">
+              <button onClick={() => setShowFavoriteFilterModal(false)} className="btn-secondary">Cancelar</button>
+              <button onClick={confirmSaveFavoriteFilter} className="btn-primary">Guardar</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {noticeModal.open && (
+        <>
+          <div className="dialog-overlay" onClick={() => setNoticeModal({ open: false, title: "", message: "" })} />
+          <div className="dialog-content text-center">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">{noticeModal.title}</h3>
+            <p className="text-slate-600 mb-6">{noticeModal.message}</p>
+            <button className="btn-primary" onClick={() => setNoticeModal({ open: false, title: "", message: "" })}>Aceptar</button>
           </div>
         </>
       )}
